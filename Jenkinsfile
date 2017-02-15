@@ -1,31 +1,30 @@
-#!groovy
+node {
+    def nodeHome = tool name: 'node-6.9.5', type: 'jenkins.plugins.nodejs.tools.NodeJSInstallation'
+    env.PATH = "${nodeHome}/bin:${env.PATH}"
 
-node('node') {
-
-    currentBuild.result = "SUCCESS"
-
-    try {
-       stage 'Checkout'
-            checkout scm
-
-       stage 'Build'
-            env.NODE_ENV = "test"
-            print "Environment will be : ${env.NODE_ENV}"
-            npm --version
-            node --version
+    stage('check tools') {
+        sh "node -v"
+        sh "npm -v"
     }
 
-
-    catch (err) {
-        currentBuild.result = "FAILURE"
-
-        mail body: "project build error is here: ${env.BUILD_URL}" ,
-        from: 'xxxx@yyyy.com',
-        replyTo: 'yyyy@yyyy.com',
-        subject: 'project build failed',
-        to: 'zzzz@yyyyy.com'
-
-        throw err
+    stage('checkout') {
+        checkout scm
     }
 
+    stage('npm install') {
+        sh "npm install"
+    }
+
+    stage('unit tests') {
+        sh "./node_modules/.bin/ng test --watch false"
+    }
+
+    stage('protractor tests') {
+        sh '''./node_modules/.bin/ng serve &
+        ngPid=$!
+        sleep 15s
+        npm run e2e
+        kill $ngPid
+        '''
+    }
 }
