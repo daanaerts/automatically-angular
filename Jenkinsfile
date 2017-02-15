@@ -1,5 +1,8 @@
 pipeline {
     agent any
+    tools {
+        nodejs 'Node 6.9.5'
+    }
     stages {
         stage('pretest') {
             steps {
@@ -11,6 +14,7 @@ pipeline {
             steps {
                 sh 'npm install'
                 sh './node_modules/.bin/ng build'
+
             }
         }
     }
